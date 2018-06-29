@@ -1,5 +1,3 @@
-library(plyr)
-
 # Functions ----
 
 #' Plots a reliability chart of a set of predicitons from a classifier
