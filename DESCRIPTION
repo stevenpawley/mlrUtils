@@ -1,0 +1,13 @@
+Package: CalibratedClassifier
+Type: Package
+Title: Performs probability calibration on a classifier
+Version: 0.1.0
+Author: Steven Pawley
+Maintainer: The package maintainer <dr.stevenpawley@gmail.com>
+Description: Simple functions to train a calibrated classifier using the platt or isotonic regression method, and then apply the calibration to a new set of probabilities
+License: GPL-3 | file LICENSE
+Encoding: UTF-8
+LazyData: true
+Depends:
+    plyr
+RoxygenNote: 6.0.1
