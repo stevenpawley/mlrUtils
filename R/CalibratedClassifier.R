@@ -91,6 +91,7 @@ calibrated_classifier = function(y_true, y_pred, method='isotonic') {
     idx = duplicated(y_pred)
     y_pred_unique = y_pred[!idx]
     y_true_unique = y_true[!idx]
+
     model = stats::isoreg(y_pred_unique, as.numeric(levels(y_true_unique))[y_true_unique])
   } else if (method == 'platt') {
     model = glm(formula = y_true ~ y_pred,
@@ -121,4 +122,43 @@ predict.calibrated_classifier = function(model, y_pred) {
     y_pred_cal = predict(model, newdata=data.frame(y_pred), type="response")
   }
   return(y_pred_cal)
+}
+
+
+#' Prediction function for raster::predict method to produce classification,
+#' probabilities for a binary class, and optionally calibrated probabilities
+#'
+#' @param model fitted mlr model
+#' @param data data passed from the raster predict method
+#' @param calmodel calibrated_classifier model
+#' @param type predict 'classification', 'probabilities', or 'all'
+#' @param label name of class to produce probabilities for
+#'
+#' @return numeric or data.frame
+#' @export
+predfun_calibrated = function(model, data, calmodel = NULL, type = 'all',
+                              label = 'prob.1') {
+  # prediction
+  y_pred = predict(model, newdata=data)
+
+  # classification
+  y_class = y_pred$data[, 'response']
+
+  # raw probabilities
+  y_prob = y_pred$data[, label]
+
+  # probability calibration
+  # raw probs -> calibrated probs using predict.calibrated_classifier
+  if (!is.null(calmodel)) {
+    y_prob = predict(model = calmodel, y_pred = y_prob)
+  }
+
+  if (type == 'classification') {
+    result = y_class
+  } else if (type == 'probabilities') {
+    result = y_prob
+  } else if (type == 'all') {
+    result = data.frame(y_class, y_prob)
+  }
+  return(result)
 }
