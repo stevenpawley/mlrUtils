@@ -1,20 +1,17 @@
-#' Permutation importances calculated during cross validation
+#' Permutation importances calculated during resampling
 #'
 #' @param learner Learner, WrappedLearner
 #' @param task task
-#' @param cv ResampleDesc object
+#' @param resampling ResampleDesc object
 #' @param measure mlr performance measure
-#' @param n_permutations numeric, number of permutations
-#' @param n_jobs numeric, run permutations across multiple clusters, default = 1
+#' @param n_permutations numeric, number of permutations, default = 50
 #'
 #' @return dataframe, containing permutations scores per feature
 #' @export
-PermutationCVImportance = function(learner, task, cv, measure, n_permutations = 50,
-                                   n_jobs = 1) {
+permutationResamplingImportance = function(learner, task, resampling, measure, n_permutations = 50) {
 
   # make resampling instance
-  desc = mlr::makeResampleDesc(method = 'CV', iters = cv)
-  resamples = mlr::makeResampleInstance(desc = desc, task = task)
+  resamples = mlr::makeResampleInstance(desc = resampling, task = task)
 
   # store mean of permutation scores per feature
   features = names(task$env$data)
@@ -40,28 +37,17 @@ PermutationCVImportance = function(learner, task, cv, measure, n_permutations = 
       return(perm_score)
     }
 
-    if (n_jobs != 1) {
-      cl = makeCluster(detectCores()-1)
-      clusterEvalQ(cl, library(mlr))
-    }
-
     # permute each variable n_permutations times and take mean score
     for (j in features) {
-      if (n_jobs != 1) {
-        perm_score = parSapply(cl, 1:n_permutations, permute_and_score(
-          X = task$env$data[test_ind, ], clf = clf, measure = measure, feature = j))
-      } else {
-        perm_score = replicate(n_permutations, permute_and_score(
-          X = task$env$data[test_ind, ], clf = clf, measure = measure, feature = j))
-      }
+      perm_score = sapply(1:n_permutations, function(x) permute_and_score(
+        X = task$env$data[test_ind, ],
+        clf = clf,
+        measure = measure,
+        feature = j))
       perm_scores[k, j] = mean(perm_score)
+      perm_scores[k, j] = best_score - perm_scores[k, j]
     }
   }
 
-  if (n_jobs != 1)
-    stopCluster(cl)
-
-  # average scores by n_permutations and subtract from best score
-  perm_scores = best_score - perm_scores
   return (perm_scores)
 }
