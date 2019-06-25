@@ -1,4 +1,4 @@
-Package: MLRUtils
+Package: mlrUtils
 Type: Package
 Title: Various functions related to the MLR R package
 Version: 0.1.0
