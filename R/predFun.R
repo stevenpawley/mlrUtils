@@ -9,7 +9,7 @@
 #'
 #' @return RasterLayer object
 #' @export
-predFun = function(model, data, lev = NULL) {
+predFun <- function(model, data, lev = NULL) {
   data <- as.data.frame(data)
 
   if (!is.null(lev))
